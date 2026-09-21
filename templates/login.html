@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — FieldScan AI</title>
+<style>
+  /* ==========================================================================
+  FieldScan AI — shared styles
+  Design concept: a field agronomist's specimen ledger meets a live scanner.
+  Paper-toned pages, hairline rules, dashed specimen-tag cards, one
+  deliberate motion moment (the scan sweep in the hero).
+  ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+ /* ---- color tokens ---- */
+ --paper:        #EFECDF;
+ --paper-dim:    #E6E2D0;
+ --paper-deep:   #DCD6BE;
+ --ink:          #223423;
+ --ink-soft:     #4B5A45;
+ --leaf:         #4C7A3D;
+ --leaf-dark:    #345428;
+ --leaf-pale:    #DCE6CE;
+ --soil:         #8C5A34;
+ --rust:         #A33B2B;
+ --rust-pale:    #F1DCD2;
+ --amber:        #C98A22;
+ --amber-pale:   #F2E2BC;
+ --line:         rgba(34,52,35,0.16);
+ --line-strong:  rgba(34,52,35,0.32);
+
+ /* ---- type ---- */
+ --font-display: 'Fraunces', serif;
+ --font-body:    'IBM Plex Sans', sans-serif;
+ --font-mono:    'IBM Plex Mono', monospace;
+
+ --radius-tag: 3px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+ margin: 0;
+ background: var(--paper);
+ color: var(--ink);
+ font-family: var(--font-body);
+ font-size: 16px;
+ line-height: 1.55;
+ -webkit-font-smoothing: antialiased;
+}
+
+img, svg{ display:block; max-width: 100%; }
+
+a{ color: inherit; }
+
+h1, h2, h3, h4{
+ font-family: var(--font-display);
+ font-weight: 600;
+ line-height: 1.1;
+ margin: 0;
+ color: var(--ink);
+}
+
+p{ margin: 0; }
+
+button{ font-family: inherit; }
+
+:focus-visible{
+ outline: 2px solid var(--leaf-dark);
+ outline-offset: 3px;
+}
+
+.visually-hidden{
+ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+ overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+@media (prefers-reduced-motion: reduce){
+ *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior:auto !important; }
+}
+
+/* ---- shell ---- */
+.wrap{
+ max-width: 1180px;
+ margin: 0 auto;
+ padding: 0 32px;
+}
+
+/* ==========================================================================
+  Header / nav
+  ========================================================================== */
+
+.site-header{
+ position: sticky;
+ top: 0;
+ z-index: 50;
+ background: var(--paper);
+ border-bottom: 1px solid var(--line);
+}
+
+.site-header .wrap{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ height: 76px;
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ text-decoration:none;
+ color: var(--ink);
+}
+
+.brand-mark{ width: 30px; height: 30px; flex: none; }
+
+.brand-name{
+ font-family: var(--font-display);
+ font-size: 1.22rem;
+ font-weight: 600;
+ letter-spacing: 0.01em;
+}
+
+.main-nav{
+ display:flex;
+ align-items:center;
+ gap: 36px;
+}
+
+.main-nav a{
+ text-decoration:none;
+ font-size: 0.95rem;
+ color: var(--ink-soft);
+ padding: 6px 0;
+ border-bottom: 1px solid transparent;
+ transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.main-nav a:hover{ color: var(--ink); border-color: var(--line-strong); }
+
+.nav-actions{
+ display:flex;
+ align-items:center;
+ gap: 14px;
+}
+
+.nav-toggle{
+ display:none;
+ background:none;
+ border:1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 8px 10px;
+ cursor:pointer;
+}
+.nav-toggle svg{ width:20px; height:20px; }
+
+/* ==========================================================================
+  Buttons & form basics
+  ========================================================================== */
+
+.btn{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap: 8px;
+ font-family: var(--font-body);
+ font-weight: 600;
+ font-size: 0.95rem;
+ padding: 12px 22px;
+ border-radius: var(--radius-tag);
+ border: 1px solid transparent;
+ cursor: pointer;
+ text-decoration:none;
+ line-height:1;
+ transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color .15s ease;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{
+ background: var(--leaf-dark);
+ color: var(--paper);
+ border-color: var(--leaf-dark);
+}
+.btn-primary:hover{ background: var(--ink); border-color: var(--ink); }
+
+.btn-ghost{
+ background: transparent;
+ color: var(--ink);
+ border-color: var(--line-strong);
+}
+.btn-ghost:hover{ border-color: var(--ink); }
+
+.btn-text{
+ background:none;
+ border:none;
+ color: var(--leaf-dark);
+ font-weight:600;
+ padding: 4px 0;
+ text-underline-offset: 3px;
+ text-decoration: underline;
+}
+
+.btn-block{ width:100%; }
+
+label{
+ display:block;
+ font-size: 0.85rem;
+ font-weight: 600;
+ color: var(--ink-soft);
+ margin-bottom: 7px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+select{
+ width: 100%;
+ font-family: var(--font-body);
+ font-size: 0.98rem;
+ color: var(--ink);
+ background: var(--paper);
+ border: 1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 12px 14px;
+}
+
+input:focus, select:focus{
+ border-color: var(--leaf-dark);
+}
+
+input::placeholder{ color: #8B8F7E; }
+
+.field{ margin-bottom: 20px; }
+
+.field-row{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 16px;
+}
+
+.field-hint{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+ margin-top: 6px;
+}
+
+.password-field{ position:relative; }
+.password-toggle{
+ position:absolute;
+ right: 12px;
+ top: 38px;
+ background:none;
+ border:none;
+ cursor:pointer;
+ color: var(--ink-soft);
+ font-size: 0.78rem;
+ font-family: var(--font-mono);
+ text-decoration: underline;
+ text-underline-offset: 3px;
+}
+
+.checkbox-row{
+ display:flex;
+ align-items:flex-start;
+ gap: 10px;
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+}
+.checkbox-row input{ margin-top: 3px; }
+
+/* ==========================================================================
+  Hero
+  ========================================================================== */
+
+.hero{
+ padding: 64px 0 96px;
+ border-bottom: 1px solid var(--line);
+}
+
+.hero .wrap{
+ display:grid;
+ grid-template-columns: 1fr 0.92fr;
+ gap: 64px;
+ align-items:center;
+}
+
+.hero-tag{
+ display:inline-flex;
+ align-items:center;
+ gap:8px;
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ color: var(--soil);
+ border: 1px dashed var(--soil);
+ border-radius: var(--radius-tag);
+ padding: 5px 10px;
+ margin-bottom: 22px;
+}
+.hero-tag .dot{ width:6px; height:6px; border-radius:50%; background: var(--rust); }
+
+.hero h1{
+ font-size: clamp(2.4rem, 4vw, 3.4rem);
+ letter-spacing: -0.01em;
+ margin-bottom: 22px;
+}
+
+.hero-lede{
+ font-size: 1.12rem;
+ color: var(--ink-soft);
+ max-width: 46ch;
+ margin-bottom: 34px;
+}
+
+.hero-ctas{
+ display:flex;
+ align-items:center;
+ gap: 22px;
+ margin-bottom: 46px;
+ flex-wrap: wrap;
+}
+
+.hero-stats{
+ display:flex;
+ gap: 36px;
+ border-top: 1px solid var(--line);
+ padding-top: 22px;
+ flex-wrap: wrap;
+}
+.hero-stats .stat-num{
+ font-family: var(--font-display);
+ font-size: 1.5rem;
+ color: var(--leaf-dark);
+ display:block;
+}
+.hero-stats .stat-label{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+}
+
+/* ---- scan card visual ---- */
+
+.scan-card{
+ position: relative;
+ background: var(--ink);
+ border-radius: 6px;
+ padding: 22px;
+ color: var(--paper);
+ box-shadow: 6px 6px 0 var(--paper-deep), 6px 6px 0 1px var(--line-strong);
+}
+
+.scan-card-head{
+ display:flex;
+ justify-content: space-between;
+ align-items:center;
+ font-family: var(--font-mono);
+ font-size: 0.72rem;
+ color: #B9C4AE;
+ margin-bottom: 14px;
+ letter-spacing: 0.03em;
+}
+
+.scan-stage{
+ position: relative;
+ border-radius: 4px;
+ overflow: hidden;
+ background: #17241A;
+ aspect-ratio: 4/3;
+}
+
+.scan-stage svg{ width:100%; height:100%; }
+
+.scan-sweep{
+ position:absolute;
+ left:0; right:0;
+ height: 34%;
+ top:-40%;
+ background: linear-gradient(180deg, rgba(201,138,34,0) 0%, rgba(201,138,34,0.35) 50%, rgba(201,138,34,0) 100%);
+ animation: sweep 3.2s ease-in-out infinite;
+}
+@keyframes sweep{
+ 0%{ top: -40%; }
+ 55%{ top: 100%; }
+ 100%{ top: 100%; }
+}
+
+.scan-marker{
+ position:absolute;
+ width: 15px; height:15px;
+ border: 1.5px solid var(--rust);
+ border-radius:50%;
+}
+.scan-marker::after{
+ content:"";
+ position:absolute; inset:-5px;
+ border:1px solid rgba(163,59,43,0.5);
+ border-radius:50%;
+}
+
+.scan-readout{
+ margin-top: 16px;
+ border-top: 1px dashed rgba(239,236,223,0.3);
+ padding-top: 14px;
+}
+.scan-readout .diag{
+ font-family: var(--font-mono);
+ font-size: 0.95rem;
+ color: var(--amber);
+ margin-bottom: 4px;
+}
+.scan-readout .conf{
+ font-size: 0.82rem;
+ color: #B9C4AE;
+}
+.scan-readout .conf b{ color: var(--paper); }
+
+/* ==========================================================================
+  Section scaffolding
+  ========================================================================== */
+
+section{ padding: 88px 0; border-bottom: 1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+
+.section-head{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 40px;
+ align-items: end;
+ margin-bottom: 52px;
+}
+
+.section-head h2{
+ font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+ max-width: 16ch;
+}
+
+.section-head .section-desc{
+ color: var(--ink-soft);
+ max-width: 48ch;
+}
+
+.section-kicker{
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ color: var(--soil);
+ margin-bottom: 12px;
+}
+
+/* ==========================================================================
+  How it works — legitimate numbered sequence
+  ========================================================================== */
+
+.steps{
+ display:grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 0;
+ border-top: 1px solid var(--line);
+}
+
+.step{
+ padding: 28px 24px 0 0;
+ border-right: 1px solid var(--line);
+}
+.step:last-child{ border-right:none; padding-right:0; }
+
+.step-num{
+ font-family: var(--font-display);
+ font-size: 1.6rem;
+ color: var(--paper-deep);
+ -webkit-text-stroke: 1px var(--ink-soft);
+ color: transparent;
+ margin-bottom: 18px;
+ display:block;
+}
+
+.step h3{
+ font-size: 1.08rem;
+ margin-bottom: 10px;
+}
+
+.step p{
+ color: var(--ink-soft);
+ font-size: 0.92rem;
+}
+
+/* ==========================================================================
+  Disease library — specimen cards
+  ========================================================================== */
+
+.specimen-grid{
+ display:grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 20px;
+}
+
+.specimen-card{
+ border: 1px dashed var(--line-strong);
+ border-radius: 4px;
+ padding: 20px;
+ background: var(--paper-dim);
+ transition: border-color 0.15s ease, background 0.15s ease;
+}
+.specimen-card:hover{ border-color: var(--soil); background: var(--paper-deep); }
+
+.specimen-icon{ width: 46px; height:46px; margin-bottom: 16px; }
+
+.specimen-card .crop-tag{
+ font-family: var(--font-mono);
+ font-size: 0.7rem;
+ color: var(--soil);
+ margin-bottom: 8px;
+ display:block;
+}
+
+.specimen-card h3{
+ font-size: 1.02rem;
+ margin-bottom: 8px;
+}
+
+.specimen-card p{
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+}
+
+/* ==========================================================================
+  Testimonial
+  ========================================================================== */
+
+.testimonial{
+ display:grid;
+ grid-template-columns: 0.85fr 1.15fr;
+ gap: 56px;
+ align-items:center;
+}
+
+.testimonial blockquote{
+ font-family: var(--font-display);
+ font-size: 1.5rem;
+ font-weight: 500;
+ line-height: 1.4;
+ margin: 0 0 20px;
+ color: var(--ink);
+}
+
+.testimonial cite{
+ font-style:normal;
+ font-size: 0.88rem;
+ color: var(--ink-soft);
+ display:block;
+}
+.testimonial cite b{ color: var(--ink); display:block; font-size: 0.95rem; margin-bottom: 2px;}
+
+.testimonial-field{
+ border: 1px solid var(--line);
+ border-radius: 4px;
+ padding: 28px;
+ background: var(--paper-dim);
+}
+.testimonial-field .row{
+ display:flex;
+ justify-content:space-between;
+ padding: 12px 0;
+ border-bottom: 1px solid var(--line);
+ font-size: 0.88rem;
+}
+.testimonial-field .row:last-child{ border-bottom:none; }
+.testimonial-field .row span:first-child{ color: var(--ink-soft); }
+.testimonial-field .row span:last-child{ font-family: var(--font-mono); }
+
+/* ==========================================================================
+  Pricing
+  ========================================================================== */
+
+.plans{
+ display:grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 20px;
+}
+
+.plan{
+ border: 1px solid var(--line);
+ border-radius: 4px;
+ padding: 30px 26px;
+ display:flex;
+ flex-direction:column;
+ background: var(--paper);
+}
+
+.plan.featured{
+ border-color: var(--leaf-dark);
+ background: var(--ink);
+ color: var(--paper);
+}
+.plan.featured .plan-desc{ color: #B9C4AE; }
+.plan.featured .plan-price small{ color: #B9C4AE; }
+.plan.featured ul li{ border-color: rgba(239,236,223,0.2); }
+
+.plan-name{
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ margin-bottom: 14px;
+}
+
+.plan-price{
+ font-family: var(--font-display);
+ font-size: 2.1rem;
+ margin-bottom: 6px;
+}
+.plan-price small{
+ font-family: var(--font-body);
+ font-size: 0.85rem;
+ font-weight:400;
+ color: var(--ink-soft);
+}
+
+.plan-desc{
+ font-size: 0.88rem;
+ color: var(--ink-soft);
+ margin-bottom: 22px;
+}
+
+.plan ul{
+ list-style:none;
+ margin: 0 0 26px;
+ padding: 0;
+ flex:1;
+}
+.plan ul li{
+ padding: 10px 0;
+ border-bottom: 1px solid var(--line);
+ font-size: 0.88rem;
+}
+.plan ul li:last-child{ border-bottom:none; }
+
+/* ==========================================================================
+  CTA banner
+  ========================================================================== */
+
+.cta-banner{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap: 32px;
+ flex-wrap:wrap;
+}
+.cta-banner h2{ font-size: clamp(1.6rem, 3vw, 2.1rem); max-width: 18ch; }
+
+/* ==========================================================================
+  Footer
+  ========================================================================== */
+
+.site-footer{
+ padding: 56px 0 32px;
+}
+
+.footer-top{
+ display:grid;
+ grid-template-columns: 1.4fr 1fr 1fr 1fr;
+ gap: 40px;
+ padding-bottom: 40px;
+ border-bottom: 1px solid var(--line);
+ margin-bottom: 24px;
+}
+
+.footer-brand p{
+ color: var(--ink-soft);
+ font-size: 0.9rem;
+ margin-top: 12px;
+ max-width: 32ch;
+}
+
+.footer-col h4{
+ font-family: var(--font-mono);
+ font-weight:500;
+ font-size: 0.76rem;
+ color: var(--soil);
+ margin-bottom: 14px;
+}
+
+.footer-col ul{ list-style:none; margin:0; padding:0; }
+.footer-col li{ margin-bottom: 10px; }
+.footer-col a{ text-decoration:none; color: var(--ink-soft); font-size: 0.9rem; }
+.footer-col a:hover{ color: var(--ink); }
+
+.footer-bottom{
+ display:flex;
+ justify-content:space-between;
+ font-size: 0.8rem;
+ color: var(--ink-soft);
+ flex-wrap: wrap;
+ gap: 10px;
+}
+
+/* ==========================================================================
+  Auth pages (signup / login)
+  ========================================================================== */
+
+.auth-shell{
+ min-height: 100vh;
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+}
+
+.auth-side{
+ background: var(--ink);
+ color: var(--paper);
+ padding: 48px;
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+ position:relative;
+ overflow:hidden;
+}
+
+.auth-side-top{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ position:relative;
+ z-index:2;
+}
+.auth-side-top .brand-name{ color: var(--paper); }
+
+.auth-side-art{
+ position:relative;
+ z-index:2;
+ margin: 40px 0;
+}
+
+.auth-side-art blockquote{
+ font-family: var(--font-display);
+ font-size: 1.55rem;
+ line-height:1.35;
+ margin: 0 0 18px;
+ max-width: 30ch;
+}
+.auth-side-art cite{
+ font-style:normal;
+ font-size: 0.85rem;
+ color: #B9C4AE;
+ display:block;
+}
+.auth-side-art cite b{ color: var(--paper); display:block; font-size:0.92rem; }
+
+.auth-leaf-field{
+ position:relative;
+ z-index:2;
+ display:grid;
+ grid-template-columns: repeat(3, 1fr);
+ border-top: 1px solid rgba(239,236,223,0.2);
+ padding-top: 22px;
+}
+.auth-leaf-field .stat-num{
+ font-family: var(--font-display);
+ font-size: 1.4rem;
+ display:block;
+ color: var(--amber);
+}
+.auth-leaf-field .stat-label{
+ font-size: 0.74rem;
+ color: #B9C4AE;
+}
+
+.auth-bg-svg{
+ position:absolute;
+ inset:0;
+ opacity: 0.55;
+ z-index:1;
+}
+
+.auth-main{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding: 48px;
+}
+
+.auth-form-wrap{
+ width: 100%;
+ max-width: 420px;
+}
+
+.auth-form-wrap .back-link{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+ text-decoration:none;
+ margin-bottom: 28px;
+}
+
+.auth-form-wrap h1{
+ font-size: 1.9rem;
+ margin-bottom: 10px;
+}
+
+.auth-sub{
+ color: var(--ink-soft);
+ margin-bottom: 32px;
+ font-size: 0.96rem;
+}
+
+.oauth-row{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 12px;
+ margin-bottom: 26px;
+}
+
+.oauth-btn{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:8px;
+ border: 1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 11px;
+ background: var(--paper);
+ font-size: 0.88rem;
+ font-weight:600;
+ cursor:pointer;
+}
+.oauth-btn:hover{ border-color: var(--ink); }
+.oauth-btn svg{ width:16px; height:16px; }
+
+.divider{
+ display:flex;
+ align-items:center;
+ gap: 14px;
+ color: var(--ink-soft);
+ font-size: 0.78rem;
+ margin-bottom: 26px;
+}
+.divider::before, .divider::after{
+ content:"";
+ flex:1;
+ height:1px;
+ background: var(--line);
+}
+
+.form-foot{
+ margin-top: 24px;
+ font-size: 0.9rem;
+ color: var(--ink-soft);
+ text-align:center;
+}
+
+.terms-note{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+ margin-top: 18px;
+ line-height:1.5;
+}
+
+.toast{
+ position: fixed;
+ bottom: 26px;
+ left: 50%;
+ transform: translateX(-50%) translateY(12px);
+ background: var(--ink);
+ color: var(--paper);
+ padding: 14px 22px;
+ border-radius: 4px;
+ font-size: 0.9rem;
+ display:flex;
+ align-items:center;
+ gap:10px;
+ opacity:0;
+ pointer-events:none;
+ transition: opacity 0.2s ease, transform 0.2s ease;
+ z-index: 100;
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast .dot{ width:7px; height:7px; border-radius:50%; background: var(--amber); flex:none; }
+
+.field-error{
+ font-size: 0.78rem;
+ color: var(--rust);
+ margin-top: 6px;
+ display:none;
+}
+.field.invalid input{ border-color: var(--rust); }
+.field.invalid .field-error{ display:block; }
+
+/* ==========================================================================
+  Responsive
+  ========================================================================== */
+
+@media (max-width: 980px){
+ .hero .wrap{ grid-template-columns: 1fr; }
+ .hero-tag{ order:-1; }
+ .steps{ grid-template-columns: repeat(2,1fr); }
+ .step{ border-right:none; border-bottom:1px solid var(--line); padding: 28px 0; }
+ .specimen-grid{ grid-template-columns: repeat(2,1fr); }
+ .plans{ grid-template-columns: 1fr; }
+ .testimonial{ grid-template-columns: 1fr; }
+ .footer-top{ grid-template-columns: 1fr 1fr; }
+ .auth-shell{ grid-template-columns: 1fr; }
+ .auth-side{ display:none; }
+ .section-head{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px){
+ .main-nav, .nav-actions .btn-ghost{ display:none; }
+ .nav-toggle{ display:inline-flex; }
+ .wrap{ padding: 0 20px; }
+ .specimen-grid{ grid-template-columns: 1fr; }
+ .field-row{ grid-template-columns: 1fr; }
+ .footer-top{ grid-template-columns: 1fr; }
+ .cta-banner{ flex-direction:column; align-items:flex-start; }
+}
+
+.main-nav.open{
+ display:flex;
+ position:absolute;
+ top:76px; left:0; right:0;
+ background: var(--paper);
+ border-bottom: 1px solid var(--line);
+ flex-direction:column;
+ align-items:flex-start;
+ padding: 20px 20px 26px;
+ gap: 18px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <aside class="auth-side">
+    <svg class="auth-bg-svg" viewBox="0 0 500 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <path d="M250 60 C150 90 90 200 110 340 C130 470 210 500 250 480 C290 500 370 470 390 340 C410 200 350 90 250 60Z" fill="#2C4326"/>
+      <path d="M250 90V470" stroke="#3C5C33" stroke-width="1.5"/>
+      <circle cx="200" cy="260" r="7" fill="#C98A22" opacity="0.5"/>
+      <circle cx="310" cy="360" r="5" fill="#A33B2B" opacity="0.5"/>
+    </svg>
+
+    <div class="auth-side-top">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 29C9 25 6 19 8 11C12 12 15 11 16 6C17 11 20 12 24 11C26 19 23 25 16 29Z" fill="#4C7A3D"/>
+      </svg>
+      <span class="brand-name">FieldScan</span>
+    </div>
+
+    <div class="auth-side-art">
+      <blockquote>"I check the scan the same way I check the sky — first thing, every morning."</blockquote>
+      <cite><b>Devon Achebe</b>Wheat &amp; corn, 620 acres</cite>
+    </div>
+
+    <div class="auth-leaf-field">
+      <div><span class="stat-num">3.2M</span><span class="stat-label">leaves scanned</span></div>
+      <div><span class="stat-num">127</span><span class="stat-label">diseases known</span></div>
+      <div><span class="stat-num">94%</span><span class="stat-label">accuracy</span></div>
+    </div>
+  </aside>
+
+  <main class="auth-main">
+    <div class="auth-form-wrap">
+      <a href="{{url_for('index')}}"  class="back-link">&larr; Back to FieldScan</a>
+      <h1>Welcome back</h1>
+      <p class="auth-sub">Log in to see this week's scans and the outbreaks tracked across your fields.</p>
+
+      <div class="oauth-row">
+        <button type="button" class="oauth-btn">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.25 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 010-4.2V7.05H2.18a11 11 0 000 9.9l3.66-2.85z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1a11 11 0 00-9.82 6.05l3.66 2.85C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+          Google
+        </button>
+        <button type="button" class="oauth-btn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.04c-.02-2.13 1.74-3.15 1.82-3.2-1-1.46-2.55-1.66-3.1-1.68-1.32-.14-2.58.78-3.25.78-.67 0-1.7-.76-2.8-.74-1.44.02-2.77.84-3.51 2.12-1.5 2.6-.38 6.44 1.07 8.55.71 1.03 1.56 2.18 2.67 2.14 1.07-.04 1.48-.7 2.78-.7 1.3 0 1.66.7 2.8.68 1.16-.02 1.89-1.05 2.6-2.09.82-1.2 1.15-2.36 1.17-2.42-.03-.01-2.24-.86-2.25-3.44zM14.98 5.6c.6-.72 1-1.72.89-2.72-.86.03-1.9.57-2.52 1.29-.55.63-1.04 1.66-.91 2.63.95.07 1.92-.48 2.54-1.2z"/></svg>
+          Apple
+        </button>
+      </div>
+
+      <div class="divider">or log in with email</div>
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="field">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@yourfarm.com" required>
+          <span class="field-error">Enter a valid email address</span>
+        </div>
+
+        <div class="field password-field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Your password" required>
+          <button type="button" class="password-toggle" data-target="password">show</button>
+          <span class="field-error">Enter your password</span>
+        </div>
+
+        <div class="checkbox-row" style="justify-content:space-between; margin-bottom:26px;">
+          <label style="display:flex; align-items:center; gap:8px; margin:0; font-weight:400;">
+            <input type="checkbox" id="remember" name="remember" style="margin:0;">
+            Keep me logged in
+          </label>
+          <a href="#" class="btn-text" style="font-size:0.85rem;">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Log in</button>
+      </form>
+
+      <p class="form-foot">New to FieldScan? <a href="{{url_for('register')}}"  class="btn-text">Create a free account</a></p>
+    </div>
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

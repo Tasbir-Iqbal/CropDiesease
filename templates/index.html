@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FieldScan AI — Diagnose crop disease from a leaf photo</title>
+<meta name="description" content="Point your camera at a leaf. FieldScan AI identifies crop disease in seconds and tells you exactly what to do about it.">
+<style>
+  /* ==========================================================================
+  FieldScan AI — shared styles
+  Design concept: a field agronomist's specimen ledger meets a live scanner.
+  Paper-toned pages, hairline rules, dashed specimen-tag cards, one
+  deliberate motion moment (the scan sweep in the hero).
+  ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root{
+ /* ---- color tokens ---- */
+ --paper:        #EFECDF;
+ --paper-dim:    #E6E2D0;
+ --paper-deep:   #DCD6BE;
+ --ink:          #223423;
+ --ink-soft:     #4B5A45;
+ --leaf:         #4C7A3D;
+ --leaf-dark:    #345428;
+ --leaf-pale:    #DCE6CE;
+ --soil:         #8C5A34;
+ --rust:         #A33B2B;
+ --rust-pale:    #F1DCD2;
+ --amber:        #C98A22;
+ --amber-pale:   #F2E2BC;
+ --line:         rgba(34,52,35,0.16);
+ --line-strong:  rgba(34,52,35,0.32);
+
+ /* ---- type ---- */
+ --font-display: 'Fraunces', serif;
+ --font-body:    'IBM Plex Sans', sans-serif;
+ --font-mono:    'IBM Plex Mono', monospace;
+
+ --radius-tag: 3px;
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+html{ scroll-behavior: smooth; }
+
+body{
+ margin: 0;
+ background: var(--paper);
+ color: var(--ink);
+ font-family: var(--font-body);
+ font-size: 16px;
+ line-height: 1.55;
+ -webkit-font-smoothing: antialiased;
+}
+
+img, svg{ display:block; max-width: 100%; }
+
+a{ color: inherit; }
+
+h1, h2, h3, h4{
+ font-family: var(--font-display);
+ font-weight: 600;
+ line-height: 1.1;
+ margin: 0;
+ color: var(--ink);
+}
+
+p{ margin: 0; }
+
+button{ font-family: inherit; }
+
+:focus-visible{
+ outline: 2px solid var(--leaf-dark);
+ outline-offset: 3px;
+}
+
+.visually-hidden{
+ position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+ overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+@media (prefers-reduced-motion: reduce){
+ *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior:auto !important; }
+}
+
+/* ---- shell ---- */
+.wrap{
+ max-width: 1180px;
+ margin: 0 auto;
+ padding: 0 32px;
+}
+
+/* ==========================================================================
+  Header / nav
+  ========================================================================== */
+
+.site-header{
+ position: sticky;
+ top: 0;
+ z-index: 50;
+ background: var(--paper);
+ border-bottom: 1px solid var(--line);
+}
+
+.site-header .wrap{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ height: 76px;
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ text-decoration:none;
+ color: var(--ink);
+}
+
+.brand-mark{ width: 30px; height: 30px; flex: none; }
+
+.brand-name{
+ font-family: var(--font-display);
+ font-size: 1.22rem;
+ font-weight: 600;
+ letter-spacing: 0.01em;
+}
+
+.main-nav{
+ display:flex;
+ align-items:center;
+ gap: 36px;
+}
+
+.main-nav a{
+ text-decoration:none;
+ font-size: 0.95rem;
+ color: var(--ink-soft);
+ padding: 6px 0;
+ border-bottom: 1px solid transparent;
+ transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.main-nav a:hover{ color: var(--ink); border-color: var(--line-strong); }
+
+.nav-actions{
+ display:flex;
+ align-items:center;
+ gap: 14px;
+}
+
+.nav-toggle{
+ display:none;
+ background:none;
+ border:1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 8px 10px;
+ cursor:pointer;
+}
+.nav-toggle svg{ width:20px; height:20px; }
+
+/* ==========================================================================
+  Buttons & form basics
+  ========================================================================== */
+
+.btn{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap: 8px;
+ font-family: var(--font-body);
+ font-weight: 600;
+ font-size: 0.95rem;
+ padding: 12px 22px;
+ border-radius: var(--radius-tag);
+ border: 1px solid transparent;
+ cursor: pointer;
+ text-decoration:none;
+ line-height:1;
+ transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, color .15s ease;
+}
+.btn:active{ transform: translateY(1px); }
+
+.btn-primary{
+ background: var(--leaf-dark);
+ color: var(--paper);
+ border-color: var(--leaf-dark);
+}
+.btn-primary:hover{ background: var(--ink); border-color: var(--ink); }
+
+.btn-ghost{
+ background: transparent;
+ color: var(--ink);
+ border-color: var(--line-strong);
+}
+.btn-ghost:hover{ border-color: var(--ink); }
+
+.btn-text{
+ background:none;
+ border:none;
+ color: var(--leaf-dark);
+ font-weight:600;
+ padding: 4px 0;
+ text-underline-offset: 3px;
+ text-decoration: underline;
+}
+
+.btn-block{ width:100%; }
+
+label{
+ display:block;
+ font-size: 0.85rem;
+ font-weight: 600;
+ color: var(--ink-soft);
+ margin-bottom: 7px;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+select{
+ width: 100%;
+ font-family: var(--font-body);
+ font-size: 0.98rem;
+ color: var(--ink);
+ background: var(--paper);
+ border: 1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 12px 14px;
+}
+
+input:focus, select:focus{
+ border-color: var(--leaf-dark);
+}
+
+input::placeholder{ color: #8B8F7E; }
+
+.field{ margin-bottom: 20px; }
+
+.field-row{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 16px;
+}
+
+.field-hint{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+ margin-top: 6px;
+}
+
+.password-field{ position:relative; }
+.password-toggle{
+ position:absolute;
+ right: 12px;
+ top: 38px;
+ background:none;
+ border:none;
+ cursor:pointer;
+ color: var(--ink-soft);
+ font-size: 0.78rem;
+ font-family: var(--font-mono);
+ text-decoration: underline;
+ text-underline-offset: 3px;
+}
+
+.checkbox-row{
+ display:flex;
+ align-items:flex-start;
+ gap: 10px;
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+}
+.checkbox-row input{ margin-top: 3px; }
+
+/* ==========================================================================
+  Hero
+  ========================================================================== */
+
+.hero{
+ padding: 64px 0 96px;
+ border-bottom: 1px solid var(--line);
+}
+
+.hero .wrap{
+ display:grid;
+ grid-template-columns: 1fr 0.92fr;
+ gap: 64px;
+ align-items:center;
+}
+
+.hero-tag{
+ display:inline-flex;
+ align-items:center;
+ gap:8px;
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ color: var(--soil);
+ border: 1px dashed var(--soil);
+ border-radius: var(--radius-tag);
+ padding: 5px 10px;
+ margin-bottom: 22px;
+}
+.hero-tag .dot{ width:6px; height:6px; border-radius:50%; background: var(--rust); }
+
+.hero h1{
+ font-size: clamp(2.4rem, 4vw, 3.4rem);
+ letter-spacing: -0.01em;
+ margin-bottom: 22px;
+}
+
+.hero-lede{
+ font-size: 1.12rem;
+ color: var(--ink-soft);
+ max-width: 46ch;
+ margin-bottom: 34px;
+}
+
+.hero-ctas{
+ display:flex;
+ align-items:center;
+ gap: 22px;
+ margin-bottom: 46px;
+ flex-wrap: wrap;
+}
+
+.hero-stats{
+ display:flex;
+ gap: 36px;
+ border-top: 1px solid var(--line);
+ padding-top: 22px;
+ flex-wrap: wrap;
+}
+.hero-stats .stat-num{
+ font-family: var(--font-display);
+ font-size: 1.5rem;
+ color: var(--leaf-dark);
+ display:block;
+}
+.hero-stats .stat-label{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+}
+
+/* ---- scan card visual ---- */
+
+.scan-card{
+ position: relative;
+ background: var(--ink);
+ border-radius: 6px;
+ padding: 22px;
+ color: var(--paper);
+ box-shadow: 6px 6px 0 var(--paper-deep), 6px 6px 0 1px var(--line-strong);
+}
+
+.scan-card-head{
+ display:flex;
+ justify-content: space-between;
+ align-items:center;
+ font-family: var(--font-mono);
+ font-size: 0.72rem;
+ color: #B9C4AE;
+ margin-bottom: 14px;
+ letter-spacing: 0.03em;
+}
+
+.scan-stage{
+ position: relative;
+ border-radius: 4px;
+ overflow: hidden;
+ background: #17241A;
+ aspect-ratio: 4/3;
+}
+
+.scan-stage svg{ width:100%; height:100%; }
+
+.scan-sweep{
+ position:absolute;
+ left:0; right:0;
+ height: 34%;
+ top:-40%;
+ background: linear-gradient(180deg, rgba(201,138,34,0) 0%, rgba(201,138,34,0.35) 50%, rgba(201,138,34,0) 100%);
+ animation: sweep 3.2s ease-in-out infinite;
+}
+@keyframes sweep{
+ 0%{ top: -40%; }
+ 55%{ top: 100%; }
+ 100%{ top: 100%; }
+}
+
+.scan-marker{
+ position:absolute;
+ width: 15px; height:15px;
+ border: 1.5px solid var(--rust);
+ border-radius:50%;
+}
+.scan-marker::after{
+ content:"";
+ position:absolute; inset:-5px;
+ border:1px solid rgba(163,59,43,0.5);
+ border-radius:50%;
+}
+
+.scan-readout{
+ margin-top: 16px;
+ border-top: 1px dashed rgba(239,236,223,0.3);
+ padding-top: 14px;
+}
+.scan-readout .diag{
+ font-family: var(--font-mono);
+ font-size: 0.95rem;
+ color: var(--amber);
+ margin-bottom: 4px;
+}
+.scan-readout .conf{
+ font-size: 0.82rem;
+ color: #B9C4AE;
+}
+.scan-readout .conf b{ color: var(--paper); }
+
+/* ==========================================================================
+  Section scaffolding
+  ========================================================================== */
+
+section{ padding: 88px 0; border-bottom: 1px solid var(--line); }
+section:last-of-type{ border-bottom:none; }
+
+.section-head{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 40px;
+ align-items: end;
+ margin-bottom: 52px;
+}
+
+.section-head h2{
+ font-size: clamp(1.7rem, 2.6vw, 2.3rem);
+ max-width: 16ch;
+}
+
+.section-head .section-desc{
+ color: var(--ink-soft);
+ max-width: 48ch;
+}
+
+.section-kicker{
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ color: var(--soil);
+ margin-bottom: 12px;
+}
+
+/* ==========================================================================
+  How it works — legitimate numbered sequence
+  ========================================================================== */
+
+.steps{
+ display:grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 0;
+ border-top: 1px solid var(--line);
+}
+
+.step{
+ padding: 28px 24px 0 0;
+ border-right: 1px solid var(--line);
+}
+.step:last-child{ border-right:none; padding-right:0; }
+
+.step-num{
+ font-family: var(--font-display);
+ font-size: 1.6rem;
+ color: var(--paper-deep);
+ -webkit-text-stroke: 1px var(--ink-soft);
+ color: transparent;
+ margin-bottom: 18px;
+ display:block;
+}
+
+.step h3{
+ font-size: 1.08rem;
+ margin-bottom: 10px;
+}
+
+.step p{
+ color: var(--ink-soft);
+ font-size: 0.92rem;
+}
+
+/* ==========================================================================
+  Disease library — specimen cards
+  ========================================================================== */
+
+.specimen-grid{
+ display:grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 20px;
+}
+
+.specimen-card{
+ border: 1px dashed var(--line-strong);
+ border-radius: 4px;
+ padding: 20px;
+ background: var(--paper-dim);
+ transition: border-color 0.15s ease, background 0.15s ease;
+}
+.specimen-card:hover{ border-color: var(--soil); background: var(--paper-deep); }
+
+.specimen-icon{ width: 46px; height:46px; margin-bottom: 16px; }
+
+.specimen-card .crop-tag{
+ font-family: var(--font-mono);
+ font-size: 0.7rem;
+ color: var(--soil);
+ margin-bottom: 8px;
+ display:block;
+}
+
+.specimen-card h3{
+ font-size: 1.02rem;
+ margin-bottom: 8px;
+}
+
+.specimen-card p{
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+}
+
+/* ==========================================================================
+  Testimonial
+  ========================================================================== */
+
+.testimonial{
+ display:grid;
+ grid-template-columns: 0.85fr 1.15fr;
+ gap: 56px;
+ align-items:center;
+}
+
+.testimonial blockquote{
+ font-family: var(--font-display);
+ font-size: 1.5rem;
+ font-weight: 500;
+ line-height: 1.4;
+ margin: 0 0 20px;
+ color: var(--ink);
+}
+
+.testimonial cite{
+ font-style:normal;
+ font-size: 0.88rem;
+ color: var(--ink-soft);
+ display:block;
+}
+.testimonial cite b{ color: var(--ink); display:block; font-size: 0.95rem; margin-bottom: 2px;}
+
+.testimonial-field{
+ border: 1px solid var(--line);
+ border-radius: 4px;
+ padding: 28px;
+ background: var(--paper-dim);
+}
+.testimonial-field .row{
+ display:flex;
+ justify-content:space-between;
+ padding: 12px 0;
+ border-bottom: 1px solid var(--line);
+ font-size: 0.88rem;
+}
+.testimonial-field .row:last-child{ border-bottom:none; }
+.testimonial-field .row span:first-child{ color: var(--ink-soft); }
+.testimonial-field .row span:last-child{ font-family: var(--font-mono); }
+
+/* ==========================================================================
+  Pricing
+  ========================================================================== */
+
+.plans{
+ display:grid;
+ grid-template-columns: repeat(3, 1fr);
+ gap: 20px;
+}
+
+.plan{
+ border: 1px solid var(--line);
+ border-radius: 4px;
+ padding: 30px 26px;
+ display:flex;
+ flex-direction:column;
+ background: var(--paper);
+}
+
+.plan.featured{
+ border-color: var(--leaf-dark);
+ background: var(--ink);
+ color: var(--paper);
+}
+.plan.featured .plan-desc{ color: #B9C4AE; }
+.plan.featured .plan-price small{ color: #B9C4AE; }
+.plan.featured ul li{ border-color: rgba(239,236,223,0.2); }
+
+.plan-name{
+ font-family: var(--font-mono);
+ font-size: 0.78rem;
+ margin-bottom: 14px;
+}
+
+.plan-price{
+ font-family: var(--font-display);
+ font-size: 2.1rem;
+ margin-bottom: 6px;
+}
+.plan-price small{
+ font-family: var(--font-body);
+ font-size: 0.85rem;
+ font-weight:400;
+ color: var(--ink-soft);
+}
+
+.plan-desc{
+ font-size: 0.88rem;
+ color: var(--ink-soft);
+ margin-bottom: 22px;
+}
+
+.plan ul{
+ list-style:none;
+ margin: 0 0 26px;
+ padding: 0;
+ flex:1;
+}
+.plan ul li{
+ padding: 10px 0;
+ border-bottom: 1px solid var(--line);
+ font-size: 0.88rem;
+}
+.plan ul li:last-child{ border-bottom:none; }
+
+/* ==========================================================================
+  CTA banner
+  ========================================================================== */
+
+.cta-banner{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ gap: 32px;
+ flex-wrap:wrap;
+}
+.cta-banner h2{ font-size: clamp(1.6rem, 3vw, 2.1rem); max-width: 18ch; }
+
+/* ==========================================================================
+  Footer
+  ========================================================================== */
+
+.site-footer{
+ padding: 56px 0 32px;
+}
+
+.footer-top{
+ display:grid;
+ grid-template-columns: 1.4fr 1fr 1fr 1fr;
+ gap: 40px;
+ padding-bottom: 40px;
+ border-bottom: 1px solid var(--line);
+ margin-bottom: 24px;
+}
+
+.footer-brand p{
+ color: var(--ink-soft);
+ font-size: 0.9rem;
+ margin-top: 12px;
+ max-width: 32ch;
+}
+
+.footer-col h4{
+ font-family: var(--font-mono);
+ font-weight:500;
+ font-size: 0.76rem;
+ color: var(--soil);
+ margin-bottom: 14px;
+}
+
+.footer-col ul{ list-style:none; margin:0; padding:0; }
+.footer-col li{ margin-bottom: 10px; }
+.footer-col a{ text-decoration:none; color: var(--ink-soft); font-size: 0.9rem; }
+.footer-col a:hover{ color: var(--ink); }
+
+.footer-bottom{
+ display:flex;
+ justify-content:space-between;
+ font-size: 0.8rem;
+ color: var(--ink-soft);
+ flex-wrap: wrap;
+ gap: 10px;
+}
+
+/* ==========================================================================
+  Auth pages (signup / login)
+  ========================================================================== */
+
+.auth-shell{
+ min-height: 100vh;
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+}
+
+.auth-side{
+ background: var(--ink);
+ color: var(--paper);
+ padding: 48px;
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+ position:relative;
+ overflow:hidden;
+}
+
+.auth-side-top{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ position:relative;
+ z-index:2;
+}
+.auth-side-top .brand-name{ color: var(--paper); }
+
+.auth-side-art{
+ position:relative;
+ z-index:2;
+ margin: 40px 0;
+}
+
+.auth-side-art blockquote{
+ font-family: var(--font-display);
+ font-size: 1.55rem;
+ line-height:1.35;
+ margin: 0 0 18px;
+ max-width: 30ch;
+}
+.auth-side-art cite{
+ font-style:normal;
+ font-size: 0.85rem;
+ color: #B9C4AE;
+ display:block;
+}
+.auth-side-art cite b{ color: var(--paper); display:block; font-size:0.92rem; }
+
+.auth-leaf-field{
+ position:relative;
+ z-index:2;
+ display:grid;
+ grid-template-columns: repeat(3, 1fr);
+ border-top: 1px solid rgba(239,236,223,0.2);
+ padding-top: 22px;
+}
+.auth-leaf-field .stat-num{
+ font-family: var(--font-display);
+ font-size: 1.4rem;
+ display:block;
+ color: var(--amber);
+}
+.auth-leaf-field .stat-label{
+ font-size: 0.74rem;
+ color: #B9C4AE;
+}
+
+.auth-bg-svg{
+ position:absolute;
+ inset:0;
+ opacity: 0.55;
+ z-index:1;
+}
+
+.auth-main{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding: 48px;
+}
+
+.auth-form-wrap{
+ width: 100%;
+ max-width: 420px;
+}
+
+.auth-form-wrap .back-link{
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ font-size: 0.85rem;
+ color: var(--ink-soft);
+ text-decoration:none;
+ margin-bottom: 28px;
+}
+
+.auth-form-wrap h1{
+ font-size: 1.9rem;
+ margin-bottom: 10px;
+}
+
+.auth-sub{
+ color: var(--ink-soft);
+ margin-bottom: 32px;
+ font-size: 0.96rem;
+}
+
+.oauth-row{
+ display:grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 12px;
+ margin-bottom: 26px;
+}
+
+.oauth-btn{
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ gap:8px;
+ border: 1px solid var(--line-strong);
+ border-radius: var(--radius-tag);
+ padding: 11px;
+ background: var(--paper);
+ font-size: 0.88rem;
+ font-weight:600;
+ cursor:pointer;
+}
+.oauth-btn:hover{ border-color: var(--ink); }
+.oauth-btn svg{ width:16px; height:16px; }
+
+.divider{
+ display:flex;
+ align-items:center;
+ gap: 14px;
+ color: var(--ink-soft);
+ font-size: 0.78rem;
+ margin-bottom: 26px;
+}
+.divider::before, .divider::after{
+ content:"";
+ flex:1;
+ height:1px;
+ background: var(--line);
+}
+
+.form-foot{
+ margin-top: 24px;
+ font-size: 0.9rem;
+ color: var(--ink-soft);
+ text-align:center;
+}
+
+.terms-note{
+ font-size: 0.78rem;
+ color: var(--ink-soft);
+ margin-top: 18px;
+ line-height:1.5;
+}
+
+.toast{
+ position: fixed;
+ bottom: 26px;
+ left: 50%;
+ transform: translateX(-50%) translateY(12px);
+ background: var(--ink);
+ color: var(--paper);
+ padding: 14px 22px;
+ border-radius: 4px;
+ font-size: 0.9rem;
+ display:flex;
+ align-items:center;
+ gap:10px;
+ opacity:0;
+ pointer-events:none;
+ transition: opacity 0.2s ease, transform 0.2s ease;
+ z-index: 100;
+}
+.toast.show{ opacity:1; transform: translateX(-50%) translateY(0); pointer-events:auto; }
+.toast .dot{ width:7px; height:7px; border-radius:50%; background: var(--amber); flex:none; }
+
+.field-error{
+ font-size: 0.78rem;
+ color: var(--rust);
+ margin-top: 6px;
+ display:none;
+}
+.field.invalid input{ border-color: var(--rust); }
+.field.invalid .field-error{ display:block; }
+
+/* ==========================================================================
+  Responsive
+  ========================================================================== */
+
+@media (max-width: 980px){
+ .hero .wrap{ grid-template-columns: 1fr; }
+ .hero-tag{ order:-1; }
+ .steps{ grid-template-columns: repeat(2,1fr); }
+ .step{ border-right:none; border-bottom:1px solid var(--line); padding: 28px 0; }
+ .specimen-grid{ grid-template-columns: repeat(2,1fr); }
+ .plans{ grid-template-columns: 1fr; }
+ .testimonial{ grid-template-columns: 1fr; }
+ .footer-top{ grid-template-columns: 1fr 1fr; }
+ .auth-shell{ grid-template-columns: 1fr; }
+ .auth-side{ display:none; }
+ .section-head{ grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px){
+ .main-nav, .nav-actions .btn-ghost{ display:none; }
+ .nav-toggle{ display:inline-flex; }
+ .wrap{ padding: 0 20px; }
+ .specimen-grid{ grid-template-columns: 1fr; }
+ .field-row{ grid-template-columns: 1fr; }
+ .footer-top{ grid-template-columns: 1fr; }
+ .cta-banner{ flex-direction:column; align-items:flex-start; }
+}
+
+.main-nav.open{
+ display:flex;
+ position:absolute;
+ top:76px; left:0; right:0;
+ background: var(--paper);
+ border-bottom: 1px solid var(--line);
+ flex-direction:column;
+ align-items:flex-start;
+ padding: 20px 20px 26px;
+ gap: 18px;
+}
+
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 29C9 25 6 19 8 11C12 12 15 11 16 6C17 11 20 12 24 11C26 19 23 25 16 29Z" fill="#4C7A3D"/>
+        <path d="M16 6V29" stroke="#EFECDF" stroke-width="1" stroke-dasharray="1.5 2"/>
+      </svg>
+      <span class="brand-name">FieldScan</span>
+    </a>
+
+    <nav class="main-nav" id="main-nav">
+      <a href="#how-it-works">How it works</a>
+      <a href="#library">Disease library</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+
+    <div class="nav-actions">
+      <a href="{{url_for('login')}}"  class="btn btn-ghost">Log in</a>
+      <a href="{{url_for('register')}}" class="btn btn-primary">Start scanning free</a>
+      <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section class="hero" style="padding-top:64px; border-bottom:1px solid var(--line);">
+    <div class="wrap">
+      <div>
+        <span class="hero-tag"><span class="dot"></span>Trained on 2.1M field specimens across 40 crops</span>
+        <h1>Catch crop disease while it's still one leaf.</h1>
+        <p class="hero-lede">Photograph a leaf and FieldScan AI tells you the disease, how far it's likely to spread, and what to spray, prune, or rotate — before it costs you the field.</p>
+        <div class="hero-ctas">
+          <a href="{{url_for('register')}}" class="btn btn-primary">Start scanning free</a>
+          <a href="#how-it-works" class="btn btn-ghost">See how it works</a>
+        </div>
+        <div class="hero-stats">
+          <div><span class="stat-num">3.2M</span><span class="stat-label">leaves scanned</span></div>
+          <div><span class="stat-num">127</span><span class="stat-label">diseases identified</span></div>
+          <div><span class="stat-num">94%</span><span class="stat-label">average accuracy</span></div>
+          <div><span class="stat-num">40+</span><span class="stat-label">crops supported</span></div>
+        </div>
+      </div>
+
+      <div class="scan-card">
+        <div class="scan-card-head">
+          <span>SPECIMEN_0472.JPG</span>
+          <span>tomato · leaf 3 of 6</span>
+        </div>
+        <div class="scan-stage">
+          <svg viewBox="0 0 300 225" xmlns="http://www.w3.org/2000/svg">
+            <rect width="300" height="225" fill="#17241A"/>
+            <path d="M150 30 C90 45 55 95 65 150 C75 195 115 205 150 200 C185 205 225 195 235 150 C245 95 210 45 150 30Z" fill="#3C5C33"/>
+            <path d="M150 34V196" stroke="#294527" stroke-width="2"/>
+            <path d="M150 60 L110 80 M150 60 L190 80 M150 95 L100 118 M150 95 L200 118 M150 132 L108 158 M150 132 L192 158 M150 168 L118 186 M150 168 L182 186" stroke="#294527" stroke-width="1.4"/>
+            <circle cx="121" cy="97" r="7" fill="#C98A22" opacity="0.85"/>
+            <circle cx="121" cy="97" r="12" fill="none" stroke="#C98A22" opacity="0.35"/>
+            <circle cx="176" cy="140" r="5" fill="#A33B2B" opacity="0.85"/>
+            <circle cx="176" cy="140" r="10" fill="none" stroke="#A33B2B" opacity="0.35"/>
+            <circle cx="139" cy="150" r="4" fill="#A33B2B" opacity="0.7"/>
+          </svg>
+          <div class="scan-sweep" aria-hidden="true"></div>
+          <div class="scan-marker" style="left:105px; top:80px;" aria-hidden="true"></div>
+          <div class="scan-marker" style="left:163px; top:122px;" aria-hidden="true"></div>
+        </div>
+        <div class="scan-readout">
+          <div class="diag">Early blight — Alternaria solani</div>
+          <div class="conf">Confidence <b>94%</b> · spreading risk: moderate · resembles 3,204 prior specimens</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">The process</div>
+          <h2>From leaf to answer in four steps.</h2>
+        </div>
+        <p class="section-desc">No lab, no sample mailer, no waiting for an extension office callback. The diagnosis happens on the phone already in your pocket.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <h3>Photograph the leaf</h3>
+          <p>Take a photo of any leaf, stem, or fruit that looks off. Works with any smartphone camera, in the field, in daylight.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <h3>AI reads the pattern</h3>
+          <p>The model compares lesion shape, color, and spread against a reference set of over two million verified field specimens.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <h3>Get a diagnosis</h3>
+          <p>Within seconds you get a named disease, a confidence score, and how it's likely to progress across the rest of the plot.</p>
+        </div>
+        <div class="step">
+          <span class="step-num">04</span>
+          <h3>Follow the treatment</h3>
+          <p>A short, specific action plan — what to apply, how much, and when to check back — tailored to your crop and region.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="library">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Disease library</div>
+          <h2>Built from real field specimens, not stock photos.</h2>
+        </div>
+        <p class="section-desc">A running sample of what FieldScan currently recognizes. Every entry links to full symptom photos, progression stages, and regional treatment notes.</p>
+      </div>
+
+      <div class="specimen-grid">
+
+        <div class="specimen-card">
+          <svg class="specimen-icon" viewBox="0 0 48 48" fill="none">
+            <path d="M24 44C13 38 8 29 11 17C17 19 21 17 24 10C27 17 31 19 37 17C40 29 35 38 24 44Z" fill="#4C7A3D"/>
+            <circle cx="19" cy="24" r="2.4" fill="#C98A22"/>
+            <circle cx="27" cy="30" r="1.8" fill="#A33B2B"/>
+          </svg>
+          <span class="crop-tag">TOMATO</span>
+          <h3>Late blight</h3>
+          <p>Dark, water-soaked patches that expand fast in cool, wet weather. Can take a field in under a week.</p>
+        </div>
+
+        <div class="specimen-card">
+          <svg class="specimen-icon" viewBox="0 0 48 48" fill="none">
+            <path d="M24 44C13 38 8 29 11 17C17 19 21 17 24 10C27 17 31 19 37 17C40 29 35 38 24 44Z" fill="#4C7A3D"/>
+            <ellipse cx="24" cy="24" rx="9" ry="6" fill="#E6E2D0" opacity="0.75"/>
+          </svg>
+          <span class="crop-tag">CUCURBITS</span>
+          <h3>Powdery mildew</h3>
+          <p>A pale, flour-like coating across the top of the leaf. Slower moving, but it quietly cuts yield all season.</p>
+        </div>
+
+        <div class="specimen-card">
+          <svg class="specimen-icon" viewBox="0 0 48 48" fill="none">
+            <path d="M24 44C13 38 8 29 11 17C17 19 21 17 24 10C27 17 31 19 37 17C40 29 35 38 24 44Z" fill="#4C7A3D"/>
+            <circle cx="20" cy="20" r="1.6" fill="#8C5A34"/>
+            <circle cx="26" cy="24" r="1.6" fill="#8C5A34"/>
+            <circle cx="22" cy="29" r="1.6" fill="#8C5A34"/>
+            <circle cx="29" cy="18" r="1.6" fill="#8C5A34"/>
+          </svg>
+          <span class="crop-tag">WHEAT</span>
+          <h3>Leaf rust</h3>
+          <p>Small orange-brown pustules scattered across the blade. Spreads on the wind between neighboring plots.</p>
+        </div>
+
+        <div class="specimen-card">
+          <svg class="specimen-icon" viewBox="0 0 48 48" fill="none">
+            <path d="M24 44C13 38 8 29 11 17C17 19 21 17 24 10C27 17 31 19 37 17C40 29 35 38 24 44Z" fill="#4C7A3D"/>
+            <circle cx="21" cy="22" r="2.2" fill="#A33B2B"/>
+            <circle cx="27" cy="27" r="1.6" fill="#A33B2B"/>
+            <circle cx="24" cy="18" r="1.2" fill="#A33B2B"/>
+          </svg>
+          <span class="crop-tag">PEPPER</span>
+          <h3>Bacterial spot</h3>
+          <p>Small, dark, raised lesions with a yellow halo. Thrives in warm, humid, overhead-irrigated fields.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap testimonial">
+      <div>
+        <blockquote>"I found the blight on row twelve two days before it would've reached row one. That's the difference between spraying a corner and losing the field."</blockquote>
+        <cite><b>Marisol Ortega</b>Fourth-generation grower, tomatoes &amp; peppers, Central Valley</cite>
+      </div>
+      <div class="testimonial-field">
+        <div class="row"><span>Farm size</span><span>340 acres</span></div>
+        <div class="row"><span>Primary crops</span><span>tomato, pepper</span></div>
+        <div class="row"><span>Scans this season</span><span>1,208</span></div>
+        <div class="row"><span>Outbreaks caught early</span><span>6</span></div>
+        <div class="row"><span>Estimated yield saved</span><span>~11%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="section-kicker">Pricing</div>
+          <h2>Priced by field, not by fear.</h2>
+        </div>
+        <p class="section-desc">Start free on a single plot. Move up when you're scanning across more acreage or coordinating a crew.</p>
+      </div>
+
+      <div class="plans">
+        <div class="plan">
+          <span class="plan-name">FREE</span>
+          <div class="plan-price">$0<small> / month</small></div>
+          <p class="plan-desc">For one grower keeping an eye on a home plot or a single field.</p>
+          <ul>
+            <li>25 scans per month</li>
+            <li>Core disease library</li>
+            <li>Basic treatment guidance</li>
+            <li>1 field</li>
+          </ul>
+          <a href="{{url_for('register')}}" class="btn btn-ghost btn-block">Start free</a>
+        </div>
+
+        <div class="plan featured">
+          <span class="plan-name">GROWER</span>
+          <div class="plan-price">$19<small> / month</small></div>
+          <p class="plan-desc">For working farms tracking disease across several fields all season.</p>
+          <ul>
+            <li>Unlimited scans</li>
+            <li>Full disease library, 127 diseases</li>
+            <li>Regional treatment plans</li>
+            <li>Up to 12 fields, spread tracking</li>
+          </ul>
+          <a href="{{url_for('register')}}" class="btn btn-primary btn-block">Start free trial</a>
+        </div>
+
+        <div class="plan">
+          <span class="plan-name">COOPERATIVE</span>
+          <div class="plan-price">Custom</div>
+          <p class="plan-desc">For co-ops and extension offices supporting many growers at once.</p>
+          <ul>
+            <li>Everything in Grower</li>
+            <li>Shared outbreak map across members</li>
+            <li>Crew accounts &amp; permissions</li>
+            <li>Priority agronomist review</li>
+          </ul>
+          <a href="#" class="btn btn-ghost btn-block">Talk to us</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap cta-banner">
+      <h2>Your next outbreak starts as one leaf. Go check it.</h2>
+      <a href="{{url_for('register')}}"  class="btn btn-primary">Start scanning free</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="index.html" class="brand">
+          <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 29C9 25 6 19 8 11C12 12 15 11 16 6C17 11 20 12 24 11C26 19 23 25 16 29Z" fill="#4C7A3D"/>
+          </svg>
+          <span class="brand-name">FieldScan</span>
+        </a>
+        <p>Leaf-level disease diagnosis, built from real field specimens. Not a substitute for a licensed agronomist on hard calls.</p>
+      </div>
+      <div class="footer-col">
+        <h4>PRODUCT</h4>
+        <ul>
+          <li><a href="#how-it-works">How it works</a></li>
+          <li><a href="#library">Disease library</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>COMPANY</h4>
+        <ul>
+          <li><a href="#">About</a></li>
+          <li><a href="#">Field research</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>ACCOUNT</h4>
+        <ul>
+          <li><a href="{{url_for('login')}}" >Log in</a></li>
+          <li><a href="{{url_for('register')}}" >Create account</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 FieldScan AI. Demo interface — no data leaves this page.</span>
+      <span>Made for growers, by people who've walked the rows.</span>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

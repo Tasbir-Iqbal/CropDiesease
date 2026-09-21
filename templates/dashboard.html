@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — FieldScan AI</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+
+
+</head>
+<body>
+
+<div class="dash-shell">
+
+  <aside class="dash-sidebar">
+    <a href="{{url_for('index')}}" class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 29C9 25 6 19 8 11C12 12 15 11 16 6C17 11 20 12 24 11C26 19 23 25 16 29Z" fill="#4C7A3D"/>
+      </svg>
+      <span class="brand-name">FieldScan</span>
+    </a>
+
+    <div class="dash-nav-section">WORKSPACE</div>
+    <ul class="dash-nav">
+      <li>
+        <button class="dash-nav-link active" data-view-link="scan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8V6a2 2 0 012-2h2M20 8V6a2 2 0 00-2-2h-2M4 16v2a2 2 0 002 2h2M20 16v2a2 2 0 01-2 2h-2"/><circle cx="12" cy="12" r="3.4"/></svg>
+          Scan a leaf
+        </button>
+      </li>
+      <li>
+        <button class="dash-nav-link" data-view-link="history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 3.5"/></svg>
+          Scan History
+        </button>
+      </li>
+      <li>
+        <button class="dash-nav-link" data-view-link="chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+          Ask AI
+        </button>
+      </li>
+      <li>
+        <button class="dash-nav-link" data-view-link="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          Settings
+        </button>
+      </li>
+    </ul>
+
+    <div class="dash-sidebar-foot">
+      <div class="dash-user">
+        <div class="dash-user-avatar">
+          {{ user["first_name"][0]|upper if user else "F" }}
+        </div>
+
+        <div>
+          <div class="dash-user-name">
+            {% if user %}
+              {{ user["first_name"] }}
+            {% endif %}
+          </div>
+
+          <div class="dash-user-plan">Grower plan</div>
+        </div>
+      </div>
+
+      <a href="{{url_for('logout')}}" class="dash-logout">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Log out
+      </a>
+    </div>
+  </aside>
+
+  <main class="dash-main">
+
+    <!-- ================= SCAN VIEW ================= -->
+    <section class="dash-view active" data-view="scan">
+      <div class="dash-topbar">
+        <div>
+          <h1>Scan a leaf</h1>
+          <p class="sub">Upload or photograph a leaf and get a diagnosis in seconds.</p>
+        </div>
+        <div class="dash-field-select">
+          <span>Field</span>
+          <select>
+            <option>North plot — tomato</option>
+            <option>Row 12 — Wheat</option>
+            <option>All fields</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="scan-workspace">
+
+        <div class="scan-upload-card">
+          <div class="scan-dropzone" id="scan-dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 16.5V18a2 2 0 002 2h12a2 2 0 002-2v-1.5M7 9l5-5 5 5M12 4v13"/></svg>
+            <div class="dz-title">Drop a leaf photo here</div>
+            <div class="dz-sub">or tap to choose a file · JPG, PNG · up to 10MB</div>
+            <input type="file" id="scan-file-input" accept="image/*" capture="environment">
+          </div>
+
+          <div class="scan-preview" id="scan-preview">
+            <img id="scan-preview-img" src="" alt="Uploaded leaf photo preview">
+            <div class="scan-preview-meta">
+              <span id="scan-preview-name"></span>
+              <button type="button" class="btn-text" id="scan-retake-btn">Choose a different photo</button>
+            </div>
+
+            <div class="scan-crop-row">
+              <label for="scan-crop-select">Crop (optional, improves accuracy)</label>
+              <select id="scan-crop-select">
+                <option value="">Not sure</option>
+                <option>Tomato</option>
+                <option>Wheat</option>
+                <option>Rice</option>
+                <option>Corn / maize</option>
+                <option>Potato</option>
+              </select>
+            </div>
+
+            <div class="scan-preview-actions">
+              <button type="button" class="btn btn-primary" id="scan-analyze-btn">Analyze leaf</button>
+            </div>
+          </div>
+
+          <p class="scan-tip">Best results: one leaf filling most of the frame, natural daylight, no flash glare on the lesion.</p>
+        </div>
+
+        <div class="scan-result-card">
+          <div class="result-empty active" id="result-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <!--<h3>No scan yet</h3>-->
+            <p>Upload a leaf photo on the left and your diagnosis will appear here.</p>
+          </div>
+
+          <div class="result-loading" id="result-loading">
+            <div class="spinner"></div>
+            <p>Comparing against known field specimens…</p>
+          </div>
+
+          <div class="result-error" id="result-error">
+            <p>Something went wrong reading that result. Try analyzing again.</p>
+          </div>
+
+          <div class="result-content" id="result-content">
+            <div class="result-head">
+              <div>
+                <div class="result-disease" id="result-disease">—</div>
+                <div class="result-latin" id="result-latin"></div>
+              </div>
+              <span class="confidence-badge" id="result-confidence">—</span>
+            </div>
+
+            <div class="result-row"><span>Crop</span><span id="result-crop">—</span></div>
+            <div class="result-row"><span>Spread risk</span><span id="result-spread">—</span></div>
+
+            <div class="result-section-label">RECOMMENDED TREATMENT</div>
+            <ul class="result-treatment" id="result-treatment"></ul>
+
+            <p class="result-note" id="result-note"></p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= SCAN HISTORY VIEW ================= -->
+    <section class="dash-view" data-view="history">
+      <div class="dash-topbar">
+        <div>
+          <h1>Scan History</h1>
+          <p class="sub">Every leaf you've scanned, with its diagnosis and date. Download any scan as a PDF report.</p>
+        </div>
+        <div class="dash-field-select">
+          <span>Field</span>
+          <select>
+            <option>All fields</option>
+            <option>North plot — tomato</option>
+            <option>Row 12 — Wheat</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="history-workspace">
+        <div class="history-empty active" id="history-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3.5 3.5"/></svg>
+          <h3>No scans yet</h3>
+          <p>Scans you run will show up here so you can track diagnoses over time.</p>
+        </div>
+
+        <table class="history-table" id="history-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Field</th>
+              <th>Crop</th>
+              <th>Diagnosis</th>
+              <th>Confidence</th>
+              <th>Report</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- rows populated by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= SETTINGS VIEW ================= -->
+    <section class="dash-view" data-view="settings">
+      <div class="dash-topbar">
+        <div>
+          <h1>Settings</h1>
+          <p class="sub">Manage your account, password, and billing.</p>
+        </div>
+      </div>
+
+      <div class="settings-workspace">
+
+        <div class="settings-card">
+          <h4>ACCOUNT</h4>
+          <div class="settings-row">
+            <label for="settings-name">Name</label>
+            <input type="text" id="settings-name" value="{% if user %}{{ user['first_name'] }}{% endif %}">
+          </div>
+          <div class="settings-row">
+            <label for="settings-email">Email</label>
+            <input type="email" id="settings-email" value="{% if user %}{{ user['email'] }}{% endif %}" autocomplete="email">
+          </div>
+          <div class="settings-row">
+            <label for="settings-plan">Plan</label>
+            <span class="settings-plan-badge">Grower plan</span>
+          </div>
+          <div class="settings-save-row">
+            <button type="button" class="btn btn-primary" id="settings-save-btn">Save changes</button>
+            <span class="settings-save-status" id="settings-save-status"></span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h4>PASSWORD</h4>
+          <div class="settings-row">
+            <label for="settings-current-password">Current password</label>
+            <input type="password" id="settings-current-password" autocomplete="current-password" placeholder="••••••••">
+          </div>
+          <div class="settings-row">
+            <label for="settings-new-password">New password</label>
+            <input type="password" id="settings-new-password" autocomplete="new-password" placeholder="At least 8 characters">
+          </div>
+          <div class="settings-row">
+            <label for="settings-confirm-password">Confirm new password</label>
+            <input type="password" id="settings-confirm-password" autocomplete="new-password" placeholder="Re-enter new password">
+          </div>
+          <div class="settings-save-row">
+            <button type="button" class="btn btn-primary" id="settings-password-btn">Update password</button>
+            <span class="settings-save-status" id="settings-password-status"></span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h4>BILLING</h4>
+          <div class="settings-row">
+            <label for="settings-card-name">Name on card</label>
+            <input type="text" id="settings-card-name" autocomplete="cc-name" placeholder="Full name">
+          </div>
+          <div class="settings-row">
+            <label for="settings-card-number">Card number</label>
+            <input type="text" id="settings-card-number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 5678 9012 3456" maxlength="19">
+          </div>
+          <div class="settings-row settings-row-split">
+            <div>
+              <label for="settings-card-expiry">Expiry</label>
+              <input type="text" id="settings-card-expiry" autocomplete="cc-exp" placeholder="MM/YY" maxlength="5">
+            </div>
+            <div>
+              <label for="settings-card-cvc">CVC</label>
+              <input type="text" id="settings-card-cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4">
+            </div>
+          </div>
+          <p class="settings-billing-note">Only the last 4 digits are stored on our servers; full card details are sent directly to our payment processor.</p>
+          <div class="settings-save-row">
+            <button type="button" class="btn btn-primary" id="settings-card-btn">Save card</button>
+            <span class="settings-save-status" id="settings-card-status"></span>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h4>PREFERENCES</h4>
+          <div class="settings-row settings-row-toggle">
+            <label for="settings-notify">Email me when a scan finishes</label>
+            <input type="checkbox" id="settings-notify" checked>
+          </div>
+          <div class="settings-row settings-row-toggle">
+            <label for="settings-units">Use metric units</label>
+            <input type="checkbox" id="settings-units" checked>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h4>DANGER ZONE</h4>
+          <button type="button" class="btn btn-danger" id="settings-delete-account-btn">Delete account</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= CHAT VIEW ================= -->
+    <section class="dash-view" data-view="chat">
+      <div class="dash-topbar">
+        <div>
+          <h1> AI Assistant</h1>
+          <p class="sub">Ask about a disease, a treatment plan, or upload a document for it to read.</p>
+        </div>
+      </div>
+
+      <div class="chat-workspace">
+
+        <div class="chat-card">
+          <div class="chat-log" id="chat-log">
+            <div class="msg msg-ai">
+              <span class="msg-label">FieldScan AI</span>
+              <div class="bubble">Hello — ask me about a disease you've spotted, a treatment plan, or upload a spec sheet and I'll read it for you.</div>
+            </div>
+          </div>
+
+          <div class="chat-attachment-chip" id="chat-attachment-chip">
+            <span id="chat-attachment-name"></span>
+            <button type="button" id="chat-attachment-remove" aria-label="Remove attached document">&times;</button>
+          </div>
+
+          <form class="chat-input-row" id="chat-form">
+            <button type="button" class="chat-attach-btn" id="chat-attach-btn" title="Attach a document">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21.4 11.1l-8.5 8.5a4.5 4.5 0 01-6.4-6.4l9-9a3 3 0 014.2 4.2l-9 9a1.5 1.5 0 01-2.1-2.1l7.8-7.8"/></svg>
+              <input type="file" id="chat-attach-input" accept=".pdf,.docx,.txt,.md,.py,.js,.html,.css">
+            </button>
+            <textarea class="chat-textarea" id="chat-textarea" rows="1" placeholder="Ask about a disease, treatment, or your uploaded document…"></textarea>
+            <button type="submit" class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <div>
+          <div class="chat-side-card">
+            <h4>SUGGESTED QUESTIONS</h4>
+            <button type="button" class="suggested-q">What's the best treatment for early blight on tomato?</button>
+            <button type="button" class="suggested-q">How do I stop powdery mildew from spreading?</button>
+            <button type="button" class="suggested-q">Is leaf rust dangerous for the rest of my wheat field?</button>
+          </div>
+          <div class="chat-side-card">
+            <h4>ATTACH A DOCUMENT</h4>
+            <p style="font-size:0.85rem; color:var(--ink-soft); line-height:1.5;">Upload a spec sheet, lab report, or extension office PDF using the clip icon. FieldScan AI will read it and answer questions using its content.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>
